@@ -1,0 +1,20 @@
+Obtaining file:///Users/aarav/Documents/GitHub/graveyard-workspace/envoy
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: envoy
+  Building editable for envoy (pyproject.toml): started
+  Building editable for envoy (pyproject.toml): finished with status 'done'
+  Created wheel for envoy: filename=envoy-0.0.3-0.editable-py2.py3-none-any.whl size=4424 sha256=5bd2b4d3299e46a7309a236967d60b2d878cd2c13ab1bf36b6f933bb19d36c2e
+  Stored in directory: /private/var/folders/n7/z23ryxfj05l_httrzt75nj480000gn/T/pip-ephem-wheel-cache-5my4_l99/wheels/55/74/03/c365d91ec1240e71f92f9e38a836b846c3e735ff89665c80b0
+Successfully built envoy
+Installing collected packages: envoy
+Successfully installed envoy-0.0.3
+
+[notice] A new release of pip is available: 25.3 -> 26.1.2
+[notice] To update, run: pip install --upgrade pip

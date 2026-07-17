@@ -1,0 +1,92 @@
+Obtaining file:///Users/aarav/Documents/GitHub/graveyard-workspace/django-rest-swagger/django-rest-swagger
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Collecting coreapi>=2.3.0 (from django-rest-swagger==2.2.0)
+  Downloading coreapi-2.3.3-py2.py3-none-any.whl.metadata (1.0 kB)
+Collecting openapi-codec>=1.3.1 (from django-rest-swagger==2.2.0)
+  Downloading openapi-codec-1.3.2.tar.gz (6.3 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting djangorestframework>=3.5.4 (from django-rest-swagger==2.2.0)
+  Downloading djangorestframework-3.17.1-py3-none-any.whl.metadata (7.9 kB)
+Collecting Django>=1.8 (from django-rest-swagger==2.2.0)
+  Downloading django-6.0.7-py3-none-any.whl.metadata (3.9 kB)
+Collecting simplejson (from django-rest-swagger==2.2.0)
+  Downloading simplejson-4.1.1-cp314-cp314-macosx_11_0_arm64.whl.metadata (3.8 kB)
+Collecting coreschema (from coreapi>=2.3.0->django-rest-swagger==2.2.0)
+  Downloading coreschema-0.0.4.tar.gz (10 kB)
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Getting requirements to build wheel: started
+  Getting requirements to build wheel: finished with status 'done'
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Collecting requests (from coreapi>=2.3.0->django-rest-swagger==2.2.0)
+  Downloading requests-2.34.2-py3-none-any.whl.metadata (4.8 kB)
+Collecting itypes (from coreapi>=2.3.0->django-rest-swagger==2.2.0)
+  Downloading itypes-1.2.0-py2.py3-none-any.whl.metadata (4.9 kB)
+Collecting uritemplate (from coreapi>=2.3.0->django-rest-swagger==2.2.0)
+  Using cached uritemplate-4.2.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting asgiref>=3.9.1 (from Django>=1.8->django-rest-swagger==2.2.0)
+  Downloading asgiref-3.12.1-py3-none-any.whl.metadata (9.4 kB)
+Collecting sqlparse>=0.5.0 (from Django>=1.8->django-rest-swagger==2.2.0)
+  Downloading sqlparse-0.5.5-py3-none-any.whl.metadata (4.7 kB)
+Collecting jinja2 (from coreschema->coreapi>=2.3.0->django-rest-swagger==2.2.0)
+  Downloading jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting MarkupSafe>=2.0 (from jinja2->coreschema->coreapi>=2.3.0->django-rest-swagger==2.2.0)
+  Downloading markupsafe-3.0.3-cp314-cp314-macosx_11_0_arm64.whl.metadata (2.7 kB)
+Collecting charset_normalizer<4,>=2 (from requests->coreapi>=2.3.0->django-rest-swagger==2.2.0)
+  Downloading charset_normalizer-3.4.9-cp314-cp314-macosx_10_15_universal2.whl.metadata (41 kB)
+Collecting idna<4,>=2.5 (from requests->coreapi>=2.3.0->django-rest-swagger==2.2.0)
+  Downloading idna-3.18-py3-none-any.whl.metadata (6.1 kB)
+Collecting urllib3<3,>=1.26 (from requests->coreapi>=2.3.0->django-rest-swagger==2.2.0)
+  Downloading urllib3-2.7.0-py3-none-any.whl.metadata (6.9 kB)
+Collecting certifi>=2023.5.7 (from requests->coreapi>=2.3.0->django-rest-swagger==2.2.0)
+  Downloading certifi-2026.6.17-py3-none-any.whl.metadata (2.5 kB)
+Downloading coreapi-2.3.3-py2.py3-none-any.whl (25 kB)
+Downloading django-6.0.7-py3-none-any.whl (8.4 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.4/8.4 MB 18.1 MB/s  0:00:00
+Downloading asgiref-3.12.1-py3-none-any.whl (25 kB)
+Downloading djangorestframework-3.17.1-py3-none-any.whl (898 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 898.8/898.8 kB 14.2 MB/s  0:00:00
+Downloading sqlparse-0.5.5-py3-none-any.whl (46 kB)
+Downloading itypes-1.2.0-py2.py3-none-any.whl (4.8 kB)
+Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading markupsafe-3.0.3-cp314-cp314-macosx_11_0_arm64.whl (12 kB)
+Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+Downloading charset_normalizer-3.4.9-cp314-cp314-macosx_10_15_universal2.whl (317 kB)
+Downloading idna-3.18-py3-none-any.whl (65 kB)
+Downloading urllib3-2.7.0-py3-none-any.whl (131 kB)
+Downloading certifi-2026.6.17-py3-none-any.whl (133 kB)
+Downloading simplejson-4.1.1-cp314-cp314-macosx_11_0_arm64.whl (90 kB)
+Using cached uritemplate-4.2.0-py3-none-any.whl (11 kB)
+Building wheels for collected packages: django-rest-swagger, openapi-codec, coreschema
+  Building editable for django-rest-swagger (pyproject.toml): started
+  Building editable for django-rest-swagger (pyproject.toml): finished with status 'done'
+  Created wheel for django-rest-swagger: filename=django_rest_swagger-2.2.0-0.editable-py2.py3-none-any.whl size=4326 sha256=5f88af09ff104a95ad637086160ec856a34aca0981869e45d4d14d2ef21371cd
+  Stored in directory: /private/var/folders/n7/z23ryxfj05l_httrzt75nj480000gn/T/pip-ephem-wheel-cache-btfbbly8/wheels/29/0f/9e/20d8719044487dd2e05d6e36c32adb419232b63639575bd067
+  Building wheel for openapi-codec (pyproject.toml): started
+  Building wheel for openapi-codec (pyproject.toml): finished with status 'done'
+  Created wheel for openapi-codec: filename=openapi_codec-1.3.2-py3-none-any.whl size=7321 sha256=903dea3c62b1d5c0fdf633e864deee057e192df5b9df2deacd9ffaca8c9f44a4
+  Stored in directory: /Users/aarav/Library/Caches/pip/wheels/0e/d1/b3/6e80c00de0b759105927c2e4247a390ac8e2a844f04c6957ad
+  Building wheel for coreschema (pyproject.toml): started
+  Building wheel for coreschema (pyproject.toml): finished with status 'done'
+  Created wheel for coreschema: filename=coreschema-0.0.4-py3-none-any.whl size=15049 sha256=683efbcf3c2604d07c1c4e3907fd2b2bb280fe4400a265f6190dc4012f251d29
+  Stored in directory: /Users/aarav/Library/Caches/pip/wheels/89/a5/f8/18caf1d3025ace94921baef41b70e01c324824abafbf7f86fc
+Successfully built django-rest-swagger openapi-codec coreschema
+Installing collected packages: itypes, urllib3, uritemplate, sqlparse, simplejson, MarkupSafe, idna, charset_normalizer, certifi, asgiref, requests, jinja2, Django, djangorestframework, coreschema, coreapi, openapi-codec, django-rest-swagger
+
+Successfully installed Django-6.0.7 MarkupSafe-3.0.3 asgiref-3.12.1 certifi-2026.6.17 charset_normalizer-3.4.9 coreapi-2.3.3 coreschema-0.0.4 django-rest-swagger-2.2.0 djangorestframework-3.17.1 idna-3.18 itypes-1.2.0 jinja2-3.1.6 openapi-codec-1.3.2 requests-2.34.2 simplejson-4.1.1 sqlparse-0.5.5 uritemplate-4.2.0 urllib3-2.7.0
+
+[notice] A new release of pip is available: 25.3 -> 26.1.2
+[notice] To update, run: pip install --upgrade pip

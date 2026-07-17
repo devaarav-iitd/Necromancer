@@ -1,0 +1,77 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/aarav/Documents/GitHub/graveyard-workspace/django-rest-swagger/django-rest-swagger
+collected 0 items / 4 errors
+
+==================================== ERRORS ====================================
+__________ ERROR collecting tests/renderers/test_openapi_renderer.py ___________
+ImportError while importing test module '/Users/aarav/Documents/GitHub/graveyard-workspace/django-rest-swagger/django-rest-swagger/tests/renderers/test_openapi_renderer.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/renderers/test_openapi_renderer.py:1: in <module>
+    import coreapi
+.venv/lib/python3.14/site-packages/coreapi/__init__.py:2: in <module>
+    from coreapi import auth, codecs, exceptions, transports, utils
+.venv/lib/python3.14/site-packages/coreapi/auth.py:1: in <module>
+    from coreapi.utils import domain_matches
+.venv/lib/python3.14/site-packages/coreapi/utils.py:5: in <module>
+    import pkg_resources
+E   ModuleNotFoundError: No module named 'pkg_resources'
+_______________ ERROR collecting tests/renderers/test_swagger.py _______________
+ImportError while importing test module '/Users/aarav/Documents/GitHub/graveyard-workspace/django-rest-swagger/django-rest-swagger/tests/renderers/test_swagger.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/renderers/test_swagger.py:4: in <module>
+    from rest_framework_swagger.renderers import SwaggerUIRenderer
+rest_framework_swagger/renderers.py:1: in <module>
+    import coreapi
+.venv/lib/python3.14/site-packages/coreapi/__init__.py:2: in <module>
+    from coreapi import auth, codecs, exceptions, transports, utils
+.venv/lib/python3.14/site-packages/coreapi/auth.py:1: in <module>
+    from coreapi.utils import domain_matches
+.venv/lib/python3.14/site-packages/coreapi/utils.py:5: in <module>
+    import pkg_resources
+E   ModuleNotFoundError: No module named 'pkg_resources'
+___________________ ERROR collecting tests/test_settings.py ____________________
+tests/test_settings.py:2: in <module>
+    from rest_framework_swagger import settings
+rest_framework_swagger/settings.py:13: in <module>
+    'LOGIN_URL': getattr(settings, 'LOGIN_URL', None),
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/django/conf/__init__.py:75: in __getattr__
+    self._setup(name)
+.venv/lib/python3.14/site-packages/django/conf/__init__.py:55: in _setup
+    raise ImproperlyConfigured(
+E   django.core.exceptions.ImproperlyConfigured: Requested setting LOGIN_URL, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.
+_____________________ ERROR collecting tests/test_views.py _____________________
+tests/test_views.py:3: in <module>
+    from rest_framework.renderers import CoreJSONRenderer
+.venv/lib/python3.14/site-packages/rest_framework/renderers.py:53: in <module>
+    class JSONRenderer(BaseRenderer):
+.venv/lib/python3.14/site-packages/rest_framework/renderers.py:60: in JSONRenderer
+    ensure_ascii = not api_settings.UNICODE_JSON
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/rest_framework/settings.py:223: in __getattr__
+    val = self.user_settings[attr]
+          ^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/rest_framework/settings.py:214: in user_settings
+    self._user_settings = getattr(settings, 'REST_FRAMEWORK', {})
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.14/site-packages/django/conf/__init__.py:75: in __getattr__
+    self._setup(name)
+.venv/lib/python3.14/site-packages/django/conf/__init__.py:55: in _setup
+    raise ImproperlyConfigured(
+E   django.core.exceptions.ImproperlyConfigured: Requested setting REST_FRAMEWORK, but settings are not configured. You must either define the environment variable DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.
+=========================== short test summary info ============================
+ERROR tests/renderers/test_openapi_renderer.py
+ERROR tests/renderers/test_swagger.py
+ERROR tests/test_settings.py - django.core.exceptions.ImproperlyConfigured: R...
+ERROR tests/test_views.py - django.core.exceptions.ImproperlyConfigured: Requ...
+!!!!!!!!!!!!!!!!!!! Interrupted: 4 errors during collection !!!!!!!!!!!!!!!!!!!!
+============================== 4 errors in 1.78s ===============================

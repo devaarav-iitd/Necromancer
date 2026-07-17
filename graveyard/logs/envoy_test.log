@@ -1,0 +1,256 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/aarav/Documents/GitHub/graveyard-workspace/envoy
+plugins: anyio-4.12.1
+collected 9 items
+
+test_envoy.py FFFFFFFFF                                                  [100%]
+
+=================================== FAILURES ===================================
+____________________________ SimpleTest.test_input _____________________________
+
+self = <test_envoy.SimpleTest testMethod=test_input>
+
+    def test_input(self):
+>       r = envoy.run("sed s/i/I/g", "Hi")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_envoy.py:9: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+envoy/core.py:203: in run
+    command = expand_args(command)
+              ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = 'sed s/i/I/g'
+
+    def expand_args(command):
+        """Parses command strings and returns a Popen-ready list."""
+    
+        # Prepare arguments.
+>       if isinstance(command, (str, unicode)):
+                                     ^^^^^^^
+E       NameError: name 'unicode' is not defined
+
+envoy/core.py:179: NameError
+_____________________ SimpleTest.test_non_existing_command _____________________
+
+self = <test_envoy.SimpleTest testMethod=test_non_existing_command>
+
+    def test_non_existing_command(self):
+>       r = envoy.run("blah")
+            ^^^^^^^^^^^^^^^^^
+
+test_envoy.py:31: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+envoy/core.py:203: in run
+    command = expand_args(command)
+              ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = 'blah'
+
+    def expand_args(command):
+        """Parses command strings and returns a Popen-ready list."""
+    
+        # Prepare arguments.
+>       if isinstance(command, (str, unicode)):
+                                     ^^^^^^^
+E       NameError: name 'unicode' is not defined
+
+envoy/core.py:179: NameError
+_____________________________ SimpleTest.test_pipe _____________________________
+
+self = <test_envoy.SimpleTest testMethod=test_pipe>
+
+    def test_pipe(self):
+>       r = envoy.run("echo -n 'hi'| tr [:lower:] [:upper:]")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_envoy.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+envoy/core.py:203: in run
+    command = expand_args(command)
+              ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = "echo -n 'hi'| tr [:lower:] [:upper:]"
+
+    def expand_args(command):
+        """Parses command strings and returns a Popen-ready list."""
+    
+        # Prepare arguments.
+>       if isinstance(command, (str, unicode)):
+                                     ^^^^^^^
+E       NameError: name 'unicode' is not defined
+
+envoy/core.py:179: NameError
+_________________________ SimpleTest.test_quoted_args __________________________
+
+self = <test_envoy.SimpleTest testMethod=test_quoted_args>
+
+    def test_quoted_args(self):
+        sentinel = 'quoted_args' * 3
+>       r = envoy.run("python -c 'print \"%s\"'" % sentinel)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_envoy.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+envoy/core.py:203: in run
+    command = expand_args(command)
+              ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = 'python -c \'print "quoted_argsquoted_argsquoted_args"\''
+
+    def expand_args(command):
+        """Parses command strings and returns a Popen-ready list."""
+    
+        # Prepare arguments.
+>       if isinstance(command, (str, unicode)):
+                                     ^^^^^^^
+E       NameError: name 'unicode' is not defined
+
+envoy/core.py:179: NameError
+___________________________ SimpleTest.test_timeout ____________________________
+
+self = <test_envoy.SimpleTest testMethod=test_timeout>
+
+    def test_timeout(self):
+>       r = envoy.run('yes | head', timeout=1)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_envoy.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+envoy/core.py:203: in run
+    command = expand_args(command)
+              ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = 'yes | head'
+
+    def expand_args(command):
+        """Parses command strings and returns a Popen-ready list."""
+    
+        # Prepare arguments.
+>       if isinstance(command, (str, unicode)):
+                                     ^^^^^^^
+E       NameError: name 'unicode' is not defined
+
+envoy/core.py:179: NameError
+_______________________ ConnectedCommandTests.test_input _______________________
+
+self = <test_envoy.ConnectedCommandTests testMethod=test_input>
+
+    def test_input(self):
+        test_string = 'asdfQWER'
+>       r = envoy.connect("cat | tr [:lower:] [:upper:]")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_envoy.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+envoy/core.py:239: in connect
+    command_str = expand_args(command).pop()
+                  ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = 'cat | tr [:lower:] [:upper:]'
+
+    def expand_args(command):
+        """Parses command strings and returns a Popen-ready list."""
+    
+        # Prepare arguments.
+>       if isinstance(command, (str, unicode)):
+                                     ^^^^^^^
+E       NameError: name 'unicode' is not defined
+
+envoy/core.py:179: NameError
+________________ ConnectedCommandTests.test_status_code_failure ________________
+
+self = <test_envoy.ConnectedCommandTests testMethod=test_status_code_failure>
+
+    def test_status_code_failure(self):
+>       c = envoy.connect("sleeep 1")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_envoy.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+envoy/core.py:239: in connect
+    command_str = expand_args(command).pop()
+                  ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = 'sleeep 1'
+
+    def expand_args(command):
+        """Parses command strings and returns a Popen-ready list."""
+    
+        # Prepare arguments.
+>       if isinstance(command, (str, unicode)):
+                                     ^^^^^^^
+E       NameError: name 'unicode' is not defined
+
+envoy/core.py:179: NameError
+_________________ ConnectedCommandTests.test_status_code_none __________________
+
+self = <test_envoy.ConnectedCommandTests testMethod=test_status_code_none>
+
+    def test_status_code_none(self):
+>       c = envoy.connect("sleep 5")
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_envoy.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+envoy/core.py:239: in connect
+    command_str = expand_args(command).pop()
+                  ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = 'sleep 5'
+
+    def expand_args(command):
+        """Parses command strings and returns a Popen-ready list."""
+    
+        # Prepare arguments.
+>       if isinstance(command, (str, unicode)):
+                                     ^^^^^^^
+E       NameError: name 'unicode' is not defined
+
+envoy/core.py:179: NameError
+________________ ConnectedCommandTests.test_status_code_success ________________
+
+self = <test_envoy.ConnectedCommandTests testMethod=test_status_code_success>
+
+    def test_status_code_success(self):
+>       c = envoy.connect("sleep 1")
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+
+test_envoy.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+envoy/core.py:239: in connect
+    command_str = expand_args(command).pop()
+                  ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+command = 'sleep 1'
+
+    def expand_args(command):
+        """Parses command strings and returns a Popen-ready list."""
+    
+        # Prepare arguments.
+>       if isinstance(command, (str, unicode)):
+                                     ^^^^^^^
+E       NameError: name 'unicode' is not defined
+
+envoy/core.py:179: NameError
+=========================== short test summary info ============================
+FAILED test_envoy.py::SimpleTest::test_input - NameError: name 'unicode' is n...
+FAILED test_envoy.py::SimpleTest::test_non_existing_command - NameError: name...
+FAILED test_envoy.py::SimpleTest::test_pipe - NameError: name 'unicode' is no...
+FAILED test_envoy.py::SimpleTest::test_quoted_args - NameError: name 'unicode...
+FAILED test_envoy.py::SimpleTest::test_timeout - NameError: name 'unicode' is...
+FAILED test_envoy.py::ConnectedCommandTests::test_input - NameError: name 'un...
+FAILED test_envoy.py::ConnectedCommandTests::test_status_code_failure - NameE...
+FAILED test_envoy.py::ConnectedCommandTests::test_status_code_none - NameErro...
+FAILED test_envoy.py::ConnectedCommandTests::test_status_code_success - NameE...
+============================== 9 failed in 0.05s ===============================
