@@ -1,4 +1,5 @@
 # Codex Usage Log
 
 | # | Date | Session focus | Key decision / outcome | Time saved | Commits |
-|---|------|---------------|-------------------------|------------|---------|
+| 1 | 2026-07-17 | Architecture stress-test | Codex hardened the design: deterministic Director (GPT proposes, code decides), evidence-based progress via JUnit XML + set-inclusion rule, anti-cheat patch policy (no editing tests/), fresh-copy-per-candidate. Full transcript in docs/architecture.md | ~3h | (fill after commit) |
+| 2 | 2026-07-17 | Architecture pushback | Challenged 4 decisions against our specific repos: forced collection-failure into a first-class state (this saves envoy & vincent, which fail before tests run), got a safe wheel-cache design to fit the 20-min budget, exposed the set-inclusion rule's stale-spec failure mode (timeout-default example), and got a ranked 5-day MVP build plan | ~2h | (fill after commit) |
