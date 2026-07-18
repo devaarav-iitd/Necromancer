@@ -407,3 +407,33 @@ With two developers, I’d split ownership this way:
 That division puts the hard truth-maintenance machinery ahead of the agent persona—which is exactly what Envoy and Vincent will force you to do.
 
 ─ Worked for 2m 08s ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+---
+
+## Session 3 — Scoring edge-case characterization
+
+Human challenge raised: does the scoring formula correctly distinguish the
+three different "collection succeeded but nothing ran" states, or do they
+silently collapse? Codex was instructed to report a collapse as a finding
+rather than force the tests to pass.
+
+**Finding:** Cases A (known xfail), B (dependency-gated skip via
+`importorskip`), and C (zero collected items) all produce the score tuple
+`(1, 0, 0)` — distinct from Envoy's real runtime failures `(1, 0, -18)` and
+from an all-passing control `(1, 1, 0)`.
+
+**Decision:** this collapse is correct by design, not a bug. These are neutral
+states — collection succeeded, nothing failed unexpectedly, nothing passed —
+so none represent patchable breakage the Surgeon should chase. `wasxfail`
+capture metadata still distinguishes A from B internally (xfailed vs skipped);
+the score tuple deliberately treats both as zero-debt.
+
+The one genuinely dangerous case — an empty or fully filtered suite — cannot
+reach this path in practice: real pytest exits with code 5 → the runner sets
+`collection_complete=False` → bootstrap scoring is used instead. Case C only
+appears here as a synthetic input proving what would happen if an upstream
+artifact incorrectly reported successful collection with zero items.
+
+Verified against real artifacts, not accidental. `5 passed` in
+`tests/test_scoring.py`.

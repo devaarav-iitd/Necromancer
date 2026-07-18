@@ -104,6 +104,7 @@ def _report_to_dict(report: pytest.CollectReport | pytest.TestReport) -> dict[st
         "duration_seconds": getattr(report, "duration", 0.0),
         "location": list(location) if location is not None else None,
         "longrepr": _longrepr(report),
+        "wasxfail": getattr(report, "wasxfail", None),
     }
 
 
