@@ -1,4 +1,27 @@
-"""Deterministic progress scores derived from runner evidence artifacts."""
+"""Keep revival progress grounded in runner evidence, not model judgment.
+
+Necromancer derives every score from the ``result.json`` and ``process.json``
+artifacts emitted by its deterministic runner.  No LLM input or LLM decision
+is accepted by this module: a model may propose a patch, but it cannot declare
+that patch successful.  In particular, the post-collection score is based on
+captured per-node pytest reports, while pre-collection progress is based on
+captured collection reports and installation command results.
+
+``compute_score`` selects between the two regimes represented here.  A
+successful collection produces ``TestScore``: its ``score`` tuple is
+``(collection_complete, passing_count, -debt)`` and its passing node IDs are
+retained for regression protection.  A failed collection produces
+``BootstrapScore``: its ``score`` tracks collection completion, collected
+items, collection errors, and installation errors until there is a runnable
+test universe.  ``collection_frontier_advance`` handles the deliberately
+bounded same-score transition between distinct collection-error frontiers.
+
+After collection, ``accepts_test_candidate`` implements the acceptance rule:
+the candidate must report complete collection, retain every node ID in the
+best ``TestScore.passing_nodeids``, and have a strictly greater ``score``.
+
+See docs/architecture.md Sessions 1-3 for full rationale and the penalty table.
+"""
 
 from __future__ import annotations
 
