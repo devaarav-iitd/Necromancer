@@ -14,3 +14,12 @@
 
 
 | 5 | 2026-07-18 | Built Coroner schema + prompt | Designed death-certificate Pydantic schema and Coroner prompt; validated against real envoy (py2_syntax, test_run, easy) and vincent (two causes, collection-time, moderate). Codex flagged that "nose" had no precise enum bucket; added missing_test_dependency cause_type and re-generated vincent's certificate to confirm | ~2h | (hash) |
+
+
+| 6 | 2026-07-18 | Built + verified scoring layer | Implemented scoring.py (test score, bootstrap score, collection-frontier rule, protected-pass acceptance, error fingerprints). Unit tests pass against real artifacts: envoy baseline (1,0,-18), vincent bootstrap (0,0,-3,0). Added module docstring documenting the evidence-based principle | ~3h | (hash) |
+
+
+| 7 | 2026-07-18 | Scoring edge-case characterization | Added tests for "collection succeeded but nothing ran" (xfail/dep-skip/empty). Found all three collapse to (1,0,0); determined this is correct neutral-state behavior, not a bug. Documented in architecture.md Session 3 | ~1h | (hash) |
+
+
+| 8 | 2026-07-18 | Built + verified patch-apply and anti-cheat policy | Implemented patch_policy.py and patch_apply.py. Verified: real envoy unicode fix applied; edits to tests/, pytest.skip injection, and preimage-hash mismatch all rejected with correct reasons. Documented enforcement boundaries (text policy + protected-pass scoring as defense-in-depth) | ~2h | (hash) |
