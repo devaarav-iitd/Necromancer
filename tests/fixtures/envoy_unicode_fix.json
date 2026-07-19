@@ -1,0 +1,8 @@
+{
+  "description": "Python 3 compatibility: remove the undefined Python 2 unicode type.",
+  "high_risk": false,
+  "preimage_sha256": {
+    "envoy/core.py": "a474e1b033d81da391ccface7c2a9991137f007b4554eb72609e2e448cc19c86"
+  },
+  "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -176,7 +176,7 @@ def expand_args(command):\n     \"\"\"Parses command strings and returns a Popen-ready list.\"\"\"\n \n     # Prepare arguments.\n-    if isinstance(command, (str, unicode)):\n+    if isinstance(command, (str,)):\n         splitter = shlex.shlex(command.encode('utf-8'))\n         splitter.whitespace = '|'\n         splitter.whitespace_split = True\n"
+}

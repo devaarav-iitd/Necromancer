@@ -1,0 +1,8 @@
+{
+  "description": "Python 3 compatibility: pass text, not encoded bytes, to shlex.",
+  "high_risk": false,
+  "preimage_sha256": {
+    "envoy/core.py": "059cced97c896f2f58616546223f72a9bcf9c061de732074fae371b90f1e81e0"
+  },
+  "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -179,3 +179,3 @@\n     if isinstance(command, (str,)):\n-        splitter = shlex.shlex(command.encode('utf-8'))\n+        splitter = shlex.shlex(command)\n         splitter.whitespace = '|'\n"
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -85,6 +86,13 @@ def _git_apply(candidate_path: Path, diff: str, *, check: bool) -> subprocess.Co
         text=True,
         capture_output=True,
         check=False,
+        env={
+            **os.environ,
+            # Candidates are commonly stored below an ignored directory in the
+            # controller repository. Stop Git from discovering that outer repo
+            # and silently skipping this disposable patch as an ignored path.
+            "GIT_CEILING_DIRECTORIES": str(candidate_path.parent),
+        },
     )
 
 

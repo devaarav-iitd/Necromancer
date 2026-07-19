@@ -23,3 +23,6 @@
 
 
 | 8 | 2026-07-18 | Built + verified patch-apply and anti-cheat policy | Implemented patch_policy.py and patch_apply.py. Verified: real envoy unicode fix applied; edits to tests/, pytest.skip injection, and preimage-hash mismatch all rejected with correct reasons. Documented enforcement boundaries (text policy + protected-pass scoring as defense-in-depth) | ~2h | (hash) |
+
+
+| 9 | 2026-07-19 | First full resurrection (algorithms) via Director | Ran the deterministic Director loop end-to-end on algorithms: baseline bootstrap (0,57,-1,0) with a fractions.gcd collection error → one-line patch (fractions.gcd → math.gcd) → final (1,61,0), 61 tests passing, promoted. Full deterministic pipeline (runner → policy → apply → score → promote) proven on a real repo | ~1h | (hash) |

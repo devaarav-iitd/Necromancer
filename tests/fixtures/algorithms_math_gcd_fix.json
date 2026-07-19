@@ -1,0 +1,8 @@
+{
+  "description": "Python 3 compatibility: import gcd from math instead of the removed fractions API.",
+  "high_risk": false,
+  "preimage_sha256": {
+    "algorithms/factorization/pollard_rho.py": "2a77dda3a1bef72d2fdfa74cbcdc95361cc481c62e0d7afc684e0d1326fe1ab7"
+  },
+  "diff": "diff --git a/algorithms/factorization/pollard_rho.py b/algorithms/factorization/pollard_rho.py\n--- a/algorithms/factorization/pollard_rho.py\n+++ b/algorithms/factorization/pollard_rho.py\n@@ -9,6 +9,6 @@\n import random\n \n from algorithms.math.primality_test import is_prime\n-from fractions import gcd\n+from math import gcd\n \n \n"
+}
