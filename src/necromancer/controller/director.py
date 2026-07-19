@@ -51,8 +51,18 @@ class PatchProposal:
     description: str = ""
 
 
+@dataclass(frozen=True)
+class SurgeonContext:
+    """Current accepted-state evidence made available to a patch proposer."""
+
+    evaluation: int
+    best_score: Score
+    repository_path: Path
+    result_path: Path
+
+
 class Surgeon(Protocol):
-    def propose(self, evaluation: int, best_score: Score) -> PatchProposal | None:
+    def propose(self, context: SurgeonContext) -> PatchProposal | None:
         """Return one patch proposal, or ``None`` when no work remains."""
 
 
@@ -83,8 +93,8 @@ class FixtureSurgeon:
             )
         return cls(tuple(proposals))
 
-    def propose(self, evaluation: int, best_score: Score) -> PatchProposal | None:
-        index = evaluation - 1
+    def propose(self, context: SurgeonContext) -> PatchProposal | None:
+        index = context.evaluation - 1
         return self.proposals[index] if 0 <= index < len(self.proposals) else None
 
 
@@ -193,7 +203,14 @@ class Director:
                     best_repository_path,
                     started,
                 )
-            proposal = surgeon.propose(evaluation, best_score)
+            proposal = surgeon.propose(
+                SurgeonContext(
+                    evaluation=evaluation,
+                    best_score=best_score,
+                    repository_path=best_repository_path,
+                    result_path=best_result_path,
+                )
+            )
             if proposal is None:
                 if staged_candidate is not None:
                     workspace.discard(staged_candidate)
