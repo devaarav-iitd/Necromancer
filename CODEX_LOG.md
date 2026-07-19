@@ -29,3 +29,6 @@
 
 
 | 10 | 2026-07-19 | Envoy honest-partial + integrity fixes | Director revived 8/9 envoy tests via staged source patches (1,0,-18)→(1,8,-2), terminal outcome partial_revival. Codex flagged two real gaps rather than faking success: the anti-cheat policy didn't actually protect root-level test_*.py (making our "refused to edit tests" claim false), and the Director had no partial/human-review status. Fixed both: policy now protects test_*.py/*_test.py/conftest.py at any depth (verified a diff to test_envoy.py is rejected); Director now emits full_revival/partial_revival with evidence-linked review records and never guesses unattributed causes. 17 tests pass | ~2h | (hash) |
+
+
+| 11 | 2026-07-19 | First autonomous AI resurrection (algorithms) | Wired real GPT-5.6 Surgeon via Responses API structured outputs. Ran live against algorithms: GPT-5.6 independently diagnosed the removed fractions.gcd, generated a minimal one-line diff (fractions→math), which passed policy, applied, and drove the repo (0,57,-1,0)→(1,61,0) full_revival in 11.5s. The AI proposed; the deterministic engine verified and promoted | ~2h | (hash) |
