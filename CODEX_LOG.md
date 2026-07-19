@@ -26,3 +26,6 @@
 
 
 | 9 | 2026-07-19 | First full resurrection (algorithms) via Director | Ran the deterministic Director loop end-to-end on algorithms: baseline bootstrap (0,57,-1,0) with a fractions.gcd collection error → one-line patch (fractions.gcd → math.gcd) → final (1,61,0), 61 tests passing, promoted. Full deterministic pipeline (runner → policy → apply → score → promote) proven on a real repo | ~1h | (hash) |
+
+
+| 10 | 2026-07-19 | Envoy honest-partial + integrity fixes | Director revived 8/9 envoy tests via staged source patches (1,0,-18)→(1,8,-2), terminal outcome partial_revival. Codex flagged two real gaps rather than faking success: the anti-cheat policy didn't actually protect root-level test_*.py (making our "refused to edit tests" claim false), and the Director had no partial/human-review status. Fixed both: policy now protects test_*.py/*_test.py/conftest.py at any depth (verified a diff to test_envoy.py is rejected); Director now emits full_revival/partial_revival with evidence-linked review records and never guesses unattributed causes. 17 tests pass | ~2h | (hash) |

@@ -51,6 +51,32 @@ diff --git a/tests/test_core.py b/tests/test_core.py
     assert not candidate.path.exists()
 
 
+def test_rejects_root_level_test_module_edit(tmp_path: Path) -> None:
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    test_file = repository / "test_envoy.py"
+    test_file.write_text("assert True\n", encoding="utf-8")
+    diff = """\\
+diff --git a/test_envoy.py b/test_envoy.py
+--- a/test_envoy.py
++++ b/test_envoy.py
+@@ -1 +1 @@
+-assert True
++assert False
+"""
+
+    decision = evaluate_patch(
+        diff,
+        repository,
+        preimage_sha256={"test_envoy.py": _sha256(test_file.read_bytes())},
+    )
+
+    assert decision.allowed is False
+    assert decision.reasons == (
+        "protected test or pytest configuration path: test_envoy.py",
+    )
+
+
 def test_rejects_pytest_skip_injection(tmp_path: Path) -> None:
     _, candidate = _workspace_with_envoy_source(tmp_path)
     original = (candidate.path / "envoy" / "core.py").read_bytes()

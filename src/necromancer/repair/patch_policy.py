@@ -164,7 +164,7 @@ def _file_patch_reasons(
         if path is None:
             continue
         reasons.extend(_path_reasons(path))
-        if _is_protected_path(path):
+        if is_protected_path(path):
             reasons.append(f"protected test or pytest configuration path: {path}")
 
     if file_patch.old_path is None:
@@ -206,11 +206,23 @@ def _path_reasons(path: str) -> list[str]:
     return reasons
 
 
-def _is_protected_path(path: str) -> bool:
+def is_protected_path(path: str) -> bool:
+    """Return whether a path is test or pytest configuration infrastructure.
+
+    Test modules can live at repository root as well as below ``test/`` or
+    ``tests/``.  Protecting the filename patterns closes that escape hatch
+    without relying on a particular project layout.
+    """
+
     parts = Path(path).parts
     if parts and parts[0] in {"test", "tests"}:
         return True
-    return Path(path).name in {"conftest.py", "pytest.ini", "tox.ini"}
+    name = Path(path).name
+    return (
+        name in {"conftest.py", "pytest.ini", "tox.ini"}
+        or (name.startswith("test_") and name.endswith(".py"))
+        or name.endswith("_test.py")
+    )
 
 
 def _diff_content_reasons(
