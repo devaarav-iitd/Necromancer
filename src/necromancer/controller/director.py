@@ -8,6 +8,7 @@ import json
 import math
 from pathlib import Path
 import re
+import shutil
 import time
 from typing import Any, Literal, Mapping, Protocol
 
@@ -63,6 +64,9 @@ class SurgeonContext:
     retry_plan_id: str | None = None
     apply_rejection_feedback: str | None = None
     apply_retry_number: int = 0
+    score_reconsideration_plan_id: str | None = None
+    score_reconsideration_diff: str | None = None
+    score_reconsideration_number: int = 0
 
 
 class Surgeon(Protocol):
@@ -113,6 +117,7 @@ class DirectorConfig:
     # original one-patch-at-a-time behavior.
     max_staged_patches: int = 1
     max_apply_retries_per_plan_item: int = 2
+    max_score_reconsiderations_per_plan_item: int = 1
     patch_policy: PatchPolicyConfig | None = None
 
 
@@ -197,6 +202,10 @@ class Director:
         retry_plan_id: str | None = None
         apply_rejection_feedback: str | None = None
         apply_retry_number = 0
+        score_reconsideration_plan_id: str | None = None
+        score_reconsideration_diff: str | None = None
+        score_reconsideration_result_path: Path | None = None
+        score_reconsideration_number = 0
         for evaluation in range(1, self.config.max_evaluations + 1):
             if _deadline_expired(started, self.config.global_deadline_seconds):
                 if staged_candidate is not None:
@@ -217,10 +226,13 @@ class Director:
                     evaluation=evaluation,
                     best_score=best_score,
                     repository_path=best_repository_path,
-                    result_path=best_result_path,
+                    result_path=score_reconsideration_result_path or best_result_path,
                     retry_plan_id=retry_plan_id,
                     apply_rejection_feedback=apply_rejection_feedback,
                     apply_retry_number=apply_retry_number,
+                    score_reconsideration_plan_id=score_reconsideration_plan_id,
+                    score_reconsideration_diff=score_reconsideration_diff,
+                    score_reconsideration_number=score_reconsideration_number,
                 )
             )
             if proposal is None:
@@ -297,6 +309,10 @@ class Director:
                 retry_plan_id = None
                 apply_rejection_feedback = None
                 apply_retry_number = 0
+                score_reconsideration_plan_id = None
+                score_reconsideration_diff = None
+                score_reconsideration_result_path = None
+                score_reconsideration_number = 0
                 if self.config.stop_after_rejection:
                     return self._result(
                         "policy_rejected",
@@ -389,6 +405,10 @@ class Director:
                 retry_plan_id = None
                 apply_rejection_feedback = None
                 apply_retry_number = 0
+                score_reconsideration_plan_id = None
+                score_reconsideration_diff = None
+                score_reconsideration_result_path = None
+                score_reconsideration_number = 0
                 continue
 
             if (
@@ -398,6 +418,10 @@ class Director:
                 retry_plan_id = None
                 apply_rejection_feedback = None
                 apply_retry_number = 0
+                score_reconsideration_plan_id = None
+                score_reconsideration_diff = None
+                score_reconsideration_result_path = None
+                score_reconsideration_number = 0
                 staged_candidate = candidate
                 staged_patch_count += 1
                 events.append(
@@ -412,11 +436,52 @@ class Director:
                 )
                 continue
 
+            if (
+                candidate is not staged_candidate
+                and score_reconsideration_number
+                < self.config.max_score_reconsiderations_per_plan_item
+            ):
+                feedback_path = _preserve_score_reconsideration_evidence(
+                    workspace, candidate_run.result_path, evaluation
+                )
+                workspace.discard(candidate)
+                staged_candidate = None
+                retry_plan_id = None
+                apply_rejection_feedback = None
+                apply_retry_number = 0
+                score_reconsideration_plan_id = (
+                    score_reconsideration_plan_id
+                    or proposal.plan_id
+                    or proposal.description
+                    or "unnamed"
+                )
+                score_reconsideration_diff = proposal.diff
+                score_reconsideration_result_path = feedback_path
+                score_reconsideration_number += 1
+                events.append(
+                    DirectorEvent(
+                        evaluation,
+                        "score_rejected",
+                        (
+                            "candidate did not satisfy deterministic progress rules; "
+                            "post-patch evidence retained for one reconsideration"
+                        ),
+                        _score_tuple(best_score),
+                        _score_tuple(candidate_score),
+                        proposal.description,
+                    )
+                )
+                continue
+
             workspace.discard(candidate)
             staged_candidate = None
             retry_plan_id = None
             apply_rejection_feedback = None
             apply_retry_number = 0
+            score_reconsideration_plan_id = None
+            score_reconsideration_diff = None
+            score_reconsideration_result_path = None
+            score_reconsideration_number = 0
             events.append(
                 DirectorEvent(
                     evaluation,
@@ -559,6 +624,16 @@ def _apply_rejection_reason(reason: str | None, stderr: str) -> str:
     if reason and detail != reason:
         return f"{reason}: {detail}"
     return detail
+
+
+def _preserve_score_reconsideration_evidence(
+    workspace: Workspace, result_path: Path, evaluation: int
+) -> Path:
+    """Keep runner evidence after the rejected disposable candidate is removed."""
+
+    destination = workspace.artifacts_dir / f"score-reconsideration-{evaluation:04d}.json"
+    shutil.copy2(result_path, destination)
+    return destination
 
 
 def _is_full_revival(score: Score) -> bool:

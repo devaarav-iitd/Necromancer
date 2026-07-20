@@ -73,7 +73,11 @@ class RealSurgeon:
             diff=response.diff,
             preimage_sha256={response.target_file: response.preimage_sha256},
             description=f"{response.plan_id}: {response.rationale}",
-            plan_id=context.retry_plan_id or response.plan_id,
+            plan_id=(
+                context.retry_plan_id
+                or context.score_reconsideration_plan_id
+                or response.plan_id
+            ),
         )
 
 
@@ -102,6 +106,21 @@ def _request_content(
         if context.apply_rejection_feedback is not None
         else None
     )
+    reconsideration_instruction = (
+        (
+            "This is score reconsideration attempt "
+            f"{context.score_reconsideration_number} for the same plan item "
+            f"{context.score_reconsideration_plan_id}. The previous patch "
+            "applied cleanly but did not improve the score. Analyze the "
+            "post-patch result.json supplied here, especially the remaining "
+            "failing node IDs and tracebacks, before proposing a different "
+            "minimal source-only approach.\n"
+            "Previous applied unified diff:\n"
+            f"{context.score_reconsideration_diff}"
+        )
+        if context.score_reconsideration_diff is not None
+        else None
+    )
     parts = [
         f"Evaluation: {context.evaluation}",
         f"Current score: {context.best_score.score}",
@@ -113,6 +132,8 @@ def _request_content(
     ]
     if retry_instruction is not None:
         parts.append(retry_instruction)
+    if reconsideration_instruction is not None:
+        parts.append(reconsideration_instruction)
     return "\n\n".join(parts)
 
 

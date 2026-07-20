@@ -222,7 +222,11 @@ def test_score_rejection_does_not_retry_the_same_plan_item(tmp_path: Path) -> No
     surgeon = NoProgressSurgeon()
     workspace = Workspace.create(repository, tmp_path / "workspace")
     result = Director(
-        config=DirectorConfig(max_evaluations=2, stop_after_rejection=False)
+        config=DirectorConfig(
+            max_evaluations=2,
+            stop_after_rejection=False,
+            max_score_reconsiderations_per_plan_item=0,
+        )
     ).revive(workspace, surgeon)
 
     assert result.status == "surgeon_exhausted"
@@ -231,6 +235,64 @@ def test_score_rejection_does_not_retry_the_same_plan_item(tmp_path: Path) -> No
     assert surgeon.contexts[1].retry_plan_id is None
     assert surgeon.contexts[1].apply_rejection_feedback is None
     assert surgeon.contexts[1].apply_retry_number == 0
+
+
+def test_score_rejection_passes_post_patch_evidence_once_then_moves_on(
+    tmp_path: Path,
+) -> None:
+    repository = _simple_repository(tmp_path, note=True)
+    source = repository / "module.py"
+    source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+    first_diff = (
+        "diff --git a/module.py b/module.py\n--- a/module.py\n+++ b/module.py\n"
+        "@@ -1,3 +1,3 @@\n-NOTE = 'old'\n+NOTE = 'first'\n \n def value():\n"
+    )
+    second_diff = (
+        "diff --git a/module.py b/module.py\n--- a/module.py\n+++ b/module.py\n"
+        "@@ -1,3 +1,3 @@\n-NOTE = 'old'\n+NOTE = 'second'\n \n def value():\n"
+    )
+
+    class ReconsideringSurgeon:
+        def __init__(self) -> None:
+            self.contexts: list[SurgeonContext] = []
+
+        def propose(self, context: SurgeonContext) -> PatchProposal | None:
+            self.contexts.append(context)
+            if context.evaluation == 1:
+                return PatchProposal(
+                    plan_id="fix-value",
+                    diff=first_diff,
+                    preimage_sha256={"module.py": source_hash},
+                )
+            if context.evaluation == 2:
+                return PatchProposal(
+                    plan_id="model-relabels-plan",
+                    diff=second_diff,
+                    preimage_sha256={"module.py": source_hash},
+                )
+            return None
+
+    surgeon = ReconsideringSurgeon()
+    workspace = Workspace.create(repository, tmp_path / "workspace")
+    result = Director(
+        config=DirectorConfig(max_evaluations=3, stop_after_rejection=False)
+    ).revive(workspace, surgeon)
+
+    assert result.status == "surgeon_exhausted"
+    assert [event.status for event in result.events] == [
+        "baseline",
+        "score_rejected",
+        "score_rejected",
+    ]
+    assert len(surgeon.contexts) == 3
+    reconsideration = surgeon.contexts[1]
+    assert reconsideration.score_reconsideration_plan_id == "fix-value"
+    assert reconsideration.score_reconsideration_number == 1
+    assert reconsideration.score_reconsideration_diff == first_diff
+    evidence = json.loads(reconsideration.result_path.read_text(encoding="utf-8"))
+    assert evidence["test"]["test_reports"]
+    assert surgeon.contexts[2].score_reconsideration_diff is None
+    assert surgeon.contexts[2].score_reconsideration_number == 0
 
 
 def _simple_repository(tmp_path: Path, *, note: bool = False) -> Path:

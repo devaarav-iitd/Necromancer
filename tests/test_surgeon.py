@@ -71,6 +71,9 @@ def test_real_surgeon_targets_innermost_non_test_traceback_file(tmp_path: Path) 
             retry_plan_id="fix-fractions-gcd",
             apply_rejection_feedback="git apply --check rejected the diff: patch failed",
             apply_retry_number=1,
+            score_reconsideration_plan_id="fix-fractions-gcd",
+            score_reconsideration_diff="diff --git a/package/broken.py b/package/broken.py",
+            score_reconsideration_number=1,
         )
     )
 
@@ -83,3 +86,5 @@ def test_real_surgeon_targets_innermost_non_test_traceback_file(tmp_path: Path) 
     assert "git apply --check rejected the diff: patch failed" in str(
         client.request["user_content"]
     )
+    assert "score reconsideration attempt 1" in str(client.request["user_content"])
+    assert "Previous applied unified diff:" in str(client.request["user_content"])

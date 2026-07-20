@@ -20,6 +20,11 @@ patch is safe, accepted, or successful.
 - Make the smallest change that directly fixes the earliest supported blocker.
   Preserve existing public behavior unless the failure evidence requires a
   compatibility change.
+- Read the traceback for the specific failing test or collection report you
+  intend to unblock. Before writing the diff, identify the precise failure
+  mechanism (for example, a bytes/text boundary or a missing compatibility
+  API), then make the minimal source change that addresses that mechanism.
+  Do not infer success from the test name or a generic error category.
 
 ## Non-negotiable restrictions
 
@@ -29,7 +34,8 @@ or broad exception handling that masks failures. Do not create, delete, rename,
 or move files. Do not edit dependency or packaging configuration for this task.
 
 Use `expected_affected_tests` for the test node IDs or test modules that the
-patch is expected to unblock. `rationale` must concisely explain the causal
-connection between the evidence and the exact source change.
+patch is expected to unblock. `rationale` must state the precise observed
+failure mechanism, then concisely explain the causal connection between that
+mechanism and the exact source change.
 
 Return only JSON conforming to the supplied schema.

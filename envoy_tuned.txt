@@ -1,0 +1,154 @@
+{
+  "status": "partial_revival",
+  "baseline_score": [
+    1,
+    0,
+    -18
+  ],
+  "final_score": [
+    1,
+    6,
+    -6
+  ],
+  "accepted_snapshot_id": "accepted-0003",
+  "evaluations": 4,
+  "events": [
+    {
+      "evaluation": 0,
+      "status": "baseline",
+      "reason": null,
+      "before_score": null,
+      "after_score": [
+        1,
+        0,
+        -18
+      ],
+      "patch_description": ""
+    },
+    {
+      "evaluation": 1,
+      "status": "accepted",
+      "reason": null,
+      "before_score": [
+        1,
+        0,
+        -18
+      ],
+      "after_score": [
+        1,
+        2,
+        -14
+      ],
+      "patch_description": "fix-python3-command-string-expansion: On Python 3, expand_args evaluates the undefined Python 2 name `unicode`, raising the observed NameError before any command can run. Introduce a version-compatible string type tuple and use it for the check; when running on Python 3, also pass text directly to `shlex.shlex` rather than encoding it to bytes, while retaining the existing Python 2 encoding behavior."
+    },
+    {
+      "evaluation": 2,
+      "status": "accepted",
+      "reason": null,
+      "before_score": [
+        1,
+        2,
+        -14
+      ],
+      "after_score": [
+        1,
+        5,
+        -8
+      ],
+      "patch_description": "fix-text-mode-communicate-input: Command.run starts Popen with universal_newlines=True, which enables text mode, but on Python 3 it converts string input to bytes before calling communicate(). subprocess then attempts to encode those bytes and raises AttributeError. Passing self.data directly preserves the required text input and removes the bytes/text mismatch; it also applies to text forwarded between pipeline commands."
+    },
+    {
+      "evaluation": 3,
+      "status": "apply_rejected",
+      "reason": "git apply --check rejected the diff: error: corrupt patch at line 12",
+      "before_score": [
+        1,
+        5,
+        -8
+      ],
+      "after_score": null,
+      "patch_description": "fix-connect-shell-status: `connect(\"sleeep 1\")` currently expands the command to an argv list and starts it with `shell=False`, so `Popen` attempts to exec the nonexistent binary directly and raises `FileNotFoundError` instead of returning a connected process whose eventual status is 127. Preserve string commands for shell execution so command-not-found is represented by the shell process exit status, and have `status_code` poll the process so completed commands expose that status without requiring `block()`."
+    },
+    {
+      "evaluation": 4,
+      "status": "accepted",
+      "reason": null,
+      "before_score": [
+        1,
+        5,
+        -8
+      ],
+      "after_score": [
+        1,
+        6,
+        -6
+      ],
+      "patch_description": "fix-connect-shell-status: connect() passes a tokenized argv to Popen with shell=False, so a nonexistent command raises FileNotFoundError immediately instead of producing the shell's nonzero exit status; additionally, ConnectedCommand.status_code only returns a cached value that is never updated unless block() is called. Pass the original command string through the shell so startup succeeds and command-not-found becomes status 127, and poll the process when status_code is read so completed success and failure statuses are observable."
+    }
+  ],
+  "review_records": [
+    {
+      "nodeid": "test_envoy.py::ConnectedCommandTests::test_input",
+      "reason": "failure is located in a protected test file; no source-only cause attribution is established",
+      "evidence": "captured test location: ../evaluation-0001/test_envoy.py"
+    },
+    {
+      "nodeid": "test_envoy.py::ConnectedCommandTests::test_status_code_failure",
+      "reason": "failure is located in a protected test file; no source-only cause attribution is established",
+      "evidence": "captured test location: ../evaluation-0001/test_envoy.py"
+    },
+    {
+      "nodeid": "test_envoy.py::SimpleTest::test_quoted_args",
+      "reason": "protected test file contains Python-2 syntax in the failing command; editing it is forbidden by patch policy",
+      "evidence": "test_envoy.py:26 contains Python-2 print syntax in a python -c command"
+    }
+  ],
+  "elapsed_seconds": 147.59233,
+  "model_patches": [
+    {
+      "plan_id": "fix-python3-command-string-expansion",
+      "rationale": "On Python 3, expand_args evaluates the undefined Python 2 name `unicode`, raising the observed NameError before any command can run. Introduce a version-compatible string type tuple and use it for the check; when running on Python 3, also pass text directly to `shlex.shlex` rather than encoding it to bytes, while retaining the existing Python 2 encoding behavior.",
+      "expected_affected_tests": [
+        "test_envoy.py"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "a474e1b033d81da391ccface7c2a9991137f007b4554eb72609e2e448cc19c86",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -15,6 +15,12 @@ import threading\n import traceback\n \n \n+try:\n+    string_types = (basestring,)\n+except NameError:\n+    string_types = (str,)\n+\n+\n __version__ = '0.0.3'\n __license__ = 'MIT'\n __author__ = 'Kenneth Reitz'\n@@ -176,8 +182,9 @@ def expand_args(command):\n     \"\"\"Parses command strings and returns a Popen-ready list.\"\"\"\n \n     # Prepare arguments.\n-    if isinstance(command, (str, unicode)):\n-        splitter = shlex.shlex(command.encode('utf-8'))\n+    if isinstance(command, string_types):\n+        command_text = command if sys.version_info[0] >= 3 else command.encode('utf-8')\n+        splitter = shlex.shlex(command_text)\n         splitter.whitespace = '|'\n         splitter.whitespace_split = True\n         command = []\n"
+    },
+    {
+      "plan_id": "fix-text-mode-communicate-input",
+      "rationale": "Command.run starts Popen with universal_newlines=True, which enables text mode, but on Python 3 it converts string input to bytes before calling communicate(). subprocess then attempts to encode those bytes and raises AttributeError. Passing self.data directly preserves the required text input and removes the bytes/text mismatch; it also applies to text forwarded between pipeline commands.",
+      "expected_affected_tests": [
+        "test_envoy.py::SimpleTest::test_input",
+        "test_envoy.py::SimpleTest::test_pipe",
+        "test_envoy.py::SimpleTest::test_timeout"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "663dd69f6258aea0464ffe282ef08f932f406d9094685c2a7fec6b518ecd13d3",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -80,12 +80,7 @@ class Command(object):\n                     cwd=cwd,\n                 )\n \n-                if sys.version_info[0] >= 3:\n-                    self.out, self.err = self.process.communicate(\n-                        input = bytes(self.data, \"UTF-8\") if self.data else None\n-                    )\n-                else:\n-                    self.out, self.err = self.process.communicate(self.data)\n+                self.out, self.err = self.process.communicate(self.data)\n             except Exception as exc:\n                 self.exc = exc\n \n"
+    },
+    {
+      "plan_id": "fix-connect-shell-status",
+      "rationale": "`connect(\"sleeep 1\")` currently expands the command to an argv list and starts it with `shell=False`, so `Popen` attempts to exec the nonexistent binary directly and raises `FileNotFoundError` instead of returning a connected process whose eventual status is 127. Preserve string commands for shell execution so command-not-found is represented by the shell process exit status, and have `status_code` poll the process so completed commands expose that status without requiring `block()`.",
+      "expected_affected_tests": [
+        "test_envoy.py::ConnectedCommandTests::test_status_code_failure",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_none",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_success"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "cce1439c9460df54d883bc84cfc7f136237dc690b23d45c35431171dc4bc7620",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -119,7 +119,7 @@ class ConnectedCommand(object):\n         If the code is None, assume that it's still running.\n         \"\"\"\n-        return self._status_code\n+        return self._process.poll()\n \n     @property\n     def pid(self):\n@@ -237,12 +237,13 @@ def connect(command, data=None, env=None, cwd=None):\n     \"\"\"Spawns a new process from the given command.\"\"\"\n \n     # TODO: support piped commands\n-    command_str = expand_args(command).pop()\n+    use_shell = isinstance(command, string_types)\n+    command_str = command if use_shell else expand_args(command).pop()\n     environ = dict(os.environ)\n     environ.update(env or {})\n \n     process = subprocess.Popen(command_str,\n         universal_newlines=True,\n-        shell=False,\n+        shell=use_shell,\n         env=environ,\n         stdin=subprocess.PIPE,\n         stdout=subprocess.PIPE,\n"
+    },
+    {
+      "plan_id": "fix-connect-shell-status",
+      "rationale": "connect() passes a tokenized argv to Popen with shell=False, so a nonexistent command raises FileNotFoundError immediately instead of producing the shell's nonzero exit status; additionally, ConnectedCommand.status_code only returns a cached value that is never updated unless block() is called. Pass the original command string through the shell so startup succeeds and command-not-found becomes status 127, and poll the process when status_code is read so completed success and failure statuses are observable.",
+      "expected_affected_tests": [
+        "test_envoy.py::ConnectedCommandTests::test_status_code_failure",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_success"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "cce1439c9460df54d883bc84cfc7f136237dc690b23d45c35431171dc4bc7620",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -119,7 +119,7 @@ class ConnectedCommand(object):\n         \"\"\"The status code of the process.\n         If the code is None, assume that it's still running.\n         \"\"\"\n-        return self._status_code\n+        return self._process.poll()\n \n     @property\n     def pid(self):\n@@ -237,13 +237,12 @@ def connect(command, data=None, env=None, cwd=None):\n     \"\"\"Spawns a new process from the given command.\"\"\"\n \n     # TODO: support piped commands\n-    command_str = expand_args(command).pop()\n     environ = dict(os.environ)\n     environ.update(env or {})\n \n-    process = subprocess.Popen(command_str,\n+    process = subprocess.Popen(command,\n         universal_newlines=True,\n-        shell=False,\n+        shell=True,\n         env=environ,\n         stdin=subprocess.PIPE,\n         stdout=subprocess.PIPE,\n"
+    }
+  ]
+}
