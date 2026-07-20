@@ -1,0 +1,138 @@
+{
+  "status": "partial_revival",
+  "baseline_score": [
+    1,
+    0,
+    -18
+  ],
+  "final_score": [
+    1,
+    6,
+    -6
+  ],
+  "accepted_snapshot_id": "accepted-0003",
+  "evaluations": 3,
+  "events": [
+    {
+      "evaluation": 0,
+      "status": "baseline",
+      "reason": null,
+      "before_score": null,
+      "after_score": [
+        1,
+        0,
+        -18
+      ],
+      "patch_description": ""
+    },
+    {
+      "evaluation": 1,
+      "status": "accepted",
+      "reason": null,
+      "before_score": [
+        1,
+        0,
+        -18
+      ],
+      "after_score": [
+        1,
+        2,
+        -14
+      ],
+      "patch_description": "fix-python3-expand-args-string-handling: All nine failures enter expand_args under Python 3, where `unicode` is undefined. Using Python 3's `str` directly also avoids encoding the command to bytes before passing it to `shlex`, which expects text."
+    },
+    {
+      "evaluation": 2,
+      "status": "accepted",
+      "reason": null,
+      "before_score": [
+        1,
+        2,
+        -14
+      ],
+      "after_score": [
+        1,
+        5,
+        -8
+      ],
+      "patch_description": "fix-text-mode-communicate-input: Command.run starts Popen with universal_newlines=True, so communicate() requires text input; encoding self.data to bytes causes Python 3.14 to call encode() on bytes and fail. Passing self.data directly preserves text-mode behavior and also fixes text forwarded between pipeline stages."
+    },
+    {
+      "evaluation": 3,
+      "status": "accepted",
+      "reason": null,
+      "before_score": [
+        1,
+        5,
+        -8
+      ],
+      "after_score": [
+        1,
+        6,
+        -6
+      ],
+      "patch_description": "connect-shell-status-poll: String commands passed to connect() are currently split and executed directly, so a missing executable raises FileNotFoundError instead of producing the shell's failure status. Execute string commands through the shell and have status_code poll the process so the resulting exit code becomes observable."
+    }
+  ],
+  "review_records": [
+    {
+      "nodeid": "test_envoy.py::ConnectedCommandTests::test_input",
+      "reason": "failure is located in a protected test file; no source-only cause attribution is established",
+      "evidence": "captured test location: ../evaluation-0001/test_envoy.py"
+    },
+    {
+      "nodeid": "test_envoy.py::ConnectedCommandTests::test_status_code_failure",
+      "reason": "failure is located in a protected test file; no source-only cause attribution is established",
+      "evidence": "captured test location: ../evaluation-0001/test_envoy.py"
+    },
+    {
+      "nodeid": "test_envoy.py::SimpleTest::test_quoted_args",
+      "reason": "protected test file contains Python-2 syntax in the failing command; editing it is forbidden by patch policy",
+      "evidence": "test_envoy.py:26 contains Python-2 print syntax in a python -c command"
+    }
+  ],
+  "elapsed_seconds": 76.582346,
+  "model_patches": [
+    {
+      "plan_id": "fix-python3-expand-args-string-handling",
+      "rationale": "All nine failures enter expand_args under Python 3, where `unicode` is undefined. Using Python 3's `str` directly also avoids encoding the command to bytes before passing it to `shlex`, which expects text.",
+      "expected_affected_tests": [
+        "test_envoy.py::SimpleTest::test_input",
+        "test_envoy.py::SimpleTest::test_non_existing_command",
+        "test_envoy.py::SimpleTest::test_pipe",
+        "test_envoy.py::SimpleTest::test_quoted_args",
+        "test_envoy.py::SimpleTest::test_timeout",
+        "test_envoy.py::ConnectedCommandTests::test_input",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_failure",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_none",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_success"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "a474e1b033d81da391ccface7c2a9991137f007b4554eb72609e2e448cc19c86",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -176,8 +176,8 @@ def expand_args(command):\n     \"\"\"Parses command strings and returns a Popen-ready list.\"\"\"\n \n     # Prepare arguments.\n-    if isinstance(command, (str, unicode)):\n-        splitter = shlex.shlex(command.encode('utf-8'))\n+    if isinstance(command, str):\n+        splitter = shlex.shlex(command)\n         splitter.whitespace = '|'\n         splitter.whitespace_split = True\n         command = []\n"
+    },
+    {
+      "plan_id": "fix-text-mode-communicate-input",
+      "rationale": "Command.run starts Popen with universal_newlines=True, so communicate() requires text input; encoding self.data to bytes causes Python 3.14 to call encode() on bytes and fail. Passing self.data directly preserves text-mode behavior and also fixes text forwarded between pipeline stages.",
+      "expected_affected_tests": [
+        "test_envoy.py::SimpleTest::test_input",
+        "test_envoy.py::SimpleTest::test_pipe",
+        "test_envoy.py::SimpleTest::test_timeout"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "c2b1ad15890e72253ca84437d58e649ac0d393f79f72cf2661429ca0b165027d",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -77,7 +77,7 @@ class Command(object):\n \n                 if sys.version_info[0] >= 3:\n                     self.out, self.err = self.process.communicate(\n-                        input = bytes(self.data, \"UTF-8\") if self.data else None\n+                        input = self.data if self.data else None\n                     )\n                 else:\n                     self.out, self.err = self.process.communicate(self.data)\n"
+    },
+    {
+      "plan_id": "connect-shell-status-poll",
+      "rationale": "String commands passed to connect() are currently split and executed directly, so a missing executable raises FileNotFoundError instead of producing the shell's failure status. Execute string commands through the shell and have status_code poll the process so the resulting exit code becomes observable.",
+      "expected_affected_tests": [
+        "test_envoy.py::ConnectedCommandTests::test_status_code_failure",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_success"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "64f4ae4717aac2d469dc707042bb0e72b5b5b2e1e9cebd22e1ebbd2c51ffd19e",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -116,7 +116,7 @@ class ConnectedCommand(object):\n         \"\"\"The status code of the process.\n         If the code is None, assume that it's still running.\n         \"\"\"\n-        return self._status_code\n+        return self._process.poll()\n \n     @property\n     def pid(self):\n@@ -235,13 +235,17 @@ def run(command, data=None, timeout=None, kill_timeout=None, env=None, cwd=None):\n def connect(command, data=None, env=None, cwd=None):\n     \"\"\"Spawns a new process from the given command.\"\"\"\n \n-    # TODO: support piped commands\n-    command_str = expand_args(command).pop()\n+    if isinstance(command, str):\n+        command_str = command\n+        shell = True\n+    else:\n+        command_str = expand_args(command).pop()\n+        shell = False\n     environ = dict(os.environ)\n     environ.update(env or {})\n \n     process = subprocess.Popen(command_str,\n         universal_newlines=True,\n-        shell=False,\n+        shell=shell,\n         env=environ,\n         stdin=subprocess.PIPE,\n         stdout=subprocess.PIPE,\n"
+    }
+  ]
+}

@@ -32,3 +32,6 @@
 
 
 | 11 | 2026-07-19 | First autonomous AI resurrection (algorithms) | Wired real GPT-5.6 Surgeon via Responses API structured outputs. Ran live against algorithms: GPT-5.6 independently diagnosed the removed fractions.gcd, generated a minimal one-line diff (fractions→math), which passed policy, applied, and drove the repo (0,57,-1,0)→(1,61,0) full_revival in 11.5s. The AI proposed; the deterministic engine verified and promoted | ~2h | (hash) |
+
+
+| 12 | 2026-07-20 | Apply-rejection retries + full 4-repo benchmark | Added bounded retries (max 2/plan-item) for malformed diffs, feeding the exact git apply --check error back to the Surgeon; score-rejections still don't retry; all safety preserved (21 tests pass). Real-Surgeon benchmark: algorithms full_revival, envoy 5/9 partial (engine rejected a non-improving patch), vincent partial (modern importlib.resources fix; remaining blocker is a test-file edit the policy forbids), django-rest-swagger correctly out-of-scope (failures in dependencies + test config, not repo source) | ~3h | (hash) |

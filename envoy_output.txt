@@ -1,0 +1,121 @@
+{
+  "status": "score_rejected",
+  "baseline_score": [
+    1,
+    0,
+    -18
+  ],
+  "final_score": [
+    1,
+    5,
+    -8
+  ],
+  "accepted_snapshot_id": "accepted-0002",
+  "evaluations": 3,
+  "events": [
+    {
+      "evaluation": 0,
+      "status": "baseline",
+      "reason": null,
+      "before_score": null,
+      "after_score": [
+        1,
+        0,
+        -18
+      ],
+      "patch_description": ""
+    },
+    {
+      "evaluation": 1,
+      "status": "accepted",
+      "reason": null,
+      "before_score": [
+        1,
+        0,
+        -18
+      ],
+      "after_score": [
+        1,
+        2,
+        -14
+      ],
+      "patch_description": "fix-python3-command-string-expansion: All nine tests fail in expand_args because Python 3 does not define unicode. Defining unicode as str on Python 3 preserves the existing Python 2 type check, while passing text rather than encoded bytes to shlex avoids the subsequent Python 3 parsing incompatibility."
+    },
+    {
+      "evaluation": 2,
+      "status": "accepted",
+      "reason": null,
+      "before_score": [
+        1,
+        2,
+        -14
+      ],
+      "after_score": [
+        1,
+        5,
+        -8
+      ],
+      "patch_description": "fix-text-mode-stdin: Command starts subprocesses with universal_newlines=True, so communicate() requires text input. Passing self.data directly instead of encoding it prevents Python 3.14 from attempting to encode an already-bytes value."
+    },
+    {
+      "evaluation": 3,
+      "status": "score_rejected",
+      "reason": "candidate did not satisfy deterministic progress rules",
+      "before_score": [
+        1,
+        5,
+        -8
+      ],
+      "after_score": [
+        1,
+        5,
+        -8
+      ],
+      "patch_description": "connect-shell-command-not-found: connect() currently tokenizes the command and executes it directly, so a missing executable raises FileNotFoundError before a ConnectedCommand can be returned. Passing the original command through the shell makes command-not-found an asynchronous nonzero process status, matching the connected-command API and also preserving shell pipeline syntax."
+    }
+  ],
+  "review_records": [],
+  "elapsed_seconds": 83.480059,
+  "model_patches": [
+    {
+      "plan_id": "fix-python3-command-string-expansion",
+      "rationale": "All nine tests fail in expand_args because Python 3 does not define unicode. Defining unicode as str on Python 3 preserves the existing Python 2 type check, while passing text rather than encoded bytes to shlex avoids the subsequent Python 3 parsing incompatibility.",
+      "expected_affected_tests": [
+        "test_envoy.py::SimpleTest::test_input",
+        "test_envoy.py::SimpleTest::test_non_existing_command",
+        "test_envoy.py::SimpleTest::test_pipe",
+        "test_envoy.py::SimpleTest::test_quoted_args",
+        "test_envoy.py::SimpleTest::test_timeout",
+        "test_envoy.py::ConnectedCommandTests::test_input",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_failure",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_none",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_success"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "a474e1b033d81da391ccface7c2a9991137f007b4554eb72609e2e448cc19c86",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -15,6 +15,11 @@ import threading\n import traceback\n \n \n+try:\n+    unicode\n+except NameError:\n+    unicode = str\n+\n __version__ = '0.0.3'\n __license__ = 'MIT'\n __author__ = 'Kenneth Reitz'\n@@ -177,7 +182,8 @@ def expand_args(command):\n \n     # Prepare arguments.\n     if isinstance(command, (str, unicode)):\n-        splitter = shlex.shlex(command.encode('utf-8'))\n+        value = command if sys.version_info[0] >= 3 else command.encode('utf-8')\n+        splitter = shlex.shlex(value)\n         splitter.whitespace = '|'\n         splitter.whitespace_split = True\n         command = []\n"
+    },
+    {
+      "plan_id": "fix-text-mode-stdin",
+      "rationale": "Command starts subprocesses with universal_newlines=True, so communicate() requires text input. Passing self.data directly instead of encoding it prevents Python 3.14 from attempting to encode an already-bytes value.",
+      "expected_affected_tests": [
+        "test_envoy.py::SimpleTest::test_input",
+        "test_envoy.py::SimpleTest::test_pipe",
+        "test_envoy.py::SimpleTest::test_timeout"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "1652cf788f194f1795f99b200acbe506240ac6ff06a88d29877b5f675d0b157a",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -79,7 +79,7 @@ class Command(object):\n \n                 if sys.version_info[0] >= 3:\n                     self.out, self.err = self.process.communicate(\n-                        input = bytes(self.data, \"UTF-8\") if self.data else None\n+                        input = self.data\n                     )\n                 else:\n                     self.out, self.err = self.process.communicate(self.data)\n"
+    },
+    {
+      "plan_id": "connect-shell-command-not-found",
+      "rationale": "connect() currently tokenizes the command and executes it directly, so a missing executable raises FileNotFoundError before a ConnectedCommand can be returned. Passing the original command through the shell makes command-not-found an asynchronous nonzero process status, matching the connected-command API and also preserving shell pipeline syntax.",
+      "expected_affected_tests": [
+        "test_envoy.py::ConnectedCommandTests::test_status_code_failure"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "a485de307d84f747f6a6188c3429f503cad0f5eeed7bbabc3ba1f57c12d26f55",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -241,13 +241,13 @@ def connect(command, data=None, env=None, cwd=None):\n     \"\"\"Spawns a new process from the given command.\"\"\"\n \n     # TODO: support piped commands\n-    command_str = expand_args(command).pop()\n+    command_str = command\n     environ = dict(os.environ)\n     environ.update(env or {})\n \n     process = subprocess.Popen(command_str,\n         universal_newlines=True,\n-        shell=False,\n+        shell=True,\n         env=environ,\n         stdin=subprocess.PIPE,\n         stdout=subprocess.PIPE,\n"
+    }
+  ]
+}

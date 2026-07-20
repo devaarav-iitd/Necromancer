@@ -49,6 +49,7 @@ class PatchProposal:
     preimage_sha256: Mapping[str, str]
     high_risk: bool = False
     description: str = ""
+    plan_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,9 @@ class SurgeonContext:
     best_score: Score
     repository_path: Path
     result_path: Path
+    retry_plan_id: str | None = None
+    apply_rejection_feedback: str | None = None
+    apply_retry_number: int = 0
 
 
 class Surgeon(Protocol):
@@ -89,6 +93,7 @@ class FixtureSurgeon:
                     preimage_sha256=dict(document["preimage_sha256"]),
                     high_risk=bool(document.get("high_risk", False)),
                     description=str(document.get("description", "")),
+                    plan_id=str(document.get("plan_id", "")),
                 )
             )
         return cls(tuple(proposals))
@@ -107,6 +112,7 @@ class DirectorConfig:
     # strict progress against the accepted baseline. The default preserves the
     # original one-patch-at-a-time behavior.
     max_staged_patches: int = 1
+    max_apply_retries_per_plan_item: int = 2
     patch_policy: PatchPolicyConfig | None = None
 
 
@@ -188,6 +194,9 @@ class Director:
         accepted_snapshot_id: str | None = None
         staged_candidate = None
         staged_patch_count = 0
+        retry_plan_id: str | None = None
+        apply_rejection_feedback: str | None = None
+        apply_retry_number = 0
         for evaluation in range(1, self.config.max_evaluations + 1):
             if _deadline_expired(started, self.config.global_deadline_seconds):
                 if staged_candidate is not None:
@@ -209,6 +218,9 @@ class Director:
                     best_score=best_score,
                     repository_path=best_repository_path,
                     result_path=best_result_path,
+                    retry_plan_id=retry_plan_id,
+                    apply_rejection_feedback=apply_rejection_feedback,
+                    apply_retry_number=apply_retry_number,
                 )
             )
             if proposal is None:
@@ -232,6 +244,12 @@ class Director:
                     started,
                 )
 
+            if staged_candidate is not None and apply_rejection_feedback is not None:
+                fresh_stage = workspace.clone_candidate(
+                    staged_candidate, f"evaluation-{evaluation:04d}"
+                )
+                workspace.discard(staged_candidate)
+                staged_candidate = fresh_stage
             candidate = staged_candidate or workspace.create_candidate(
                 f"evaluation-{evaluation:04d}"
             )
@@ -243,20 +261,42 @@ class Director:
                 config=self.config.patch_policy,
             )
             if not decision.allowed:
-                workspace.discard(candidate)
-                if candidate is staged_candidate:
-                    staged_candidate = None
-                    staged_patch_count = 0
+                rejection_reason = "; ".join(decision.reasons)
                 events.append(
                     DirectorEvent(
                         evaluation,
-                        "policy_rejected",
-                        "; ".join(decision.reasons),
+                        "apply_rejected"
+                        if _is_repairable_apply_rejection(decision.reasons)
+                        else "policy_rejected",
+                        rejection_reason,
                         _score_tuple(best_score),
                         None,
                         proposal.description,
                     )
                 )
+                if _is_repairable_apply_rejection(decision.reasons):
+                    (
+                        retry_plan_id,
+                        apply_rejection_feedback,
+                        apply_retry_number,
+                        staged_candidate,
+                    ) = self._schedule_apply_retry(
+                        workspace=workspace,
+                        candidate=candidate,
+                        staged_candidate=staged_candidate,
+                        proposal=proposal,
+                        rejection_reason=rejection_reason,
+                        retry_plan_id=retry_plan_id,
+                        apply_retry_number=apply_retry_number,
+                    )
+                    continue
+                workspace.discard(candidate)
+                if candidate is staged_candidate:
+                    staged_candidate = None
+                    staged_patch_count = 0
+                retry_plan_id = None
+                apply_rejection_feedback = None
+                apply_retry_number = 0
                 if self.config.stop_after_rejection:
                     return self._result(
                         "policy_rejected",
@@ -271,6 +311,11 @@ class Director:
                     )
                 continue
 
+            staged_backup = (
+                workspace.clone_candidate(candidate, f"retry-base-{evaluation:04d}")
+                if candidate is staged_candidate
+                else None
+            )
             applied = apply_patch_to_candidate(
                 candidate,
                 proposal.diff,
@@ -279,31 +324,38 @@ class Director:
                 config=self.config.patch_policy,
             )
             if applied.status != "applied":
-                workspace.discard(candidate)
-                if candidate is staged_candidate:
-                    staged_candidate = None
-                    staged_patch_count = 0
+                rejection_reason = _apply_rejection_reason(applied.reason, applied.stderr)
                 events.append(
                     DirectorEvent(
                         evaluation,
                         "apply_rejected",
-                        applied.reason,
+                        rejection_reason,
                         _score_tuple(best_score),
                         None,
                         proposal.description,
                     )
                 )
-                return self._result(
-                    "apply_rejected",
-                    baseline_score,
-                    best_score,
-                    accepted_snapshot_id,
-                    evaluation,
-                    events,
-                    best_result_path,
-                    best_repository_path,
-                    started,
+                if staged_backup is not None:
+                    staged_candidate = staged_backup
+                else:
+                    staged_candidate = None
+                (
+                    retry_plan_id,
+                    apply_rejection_feedback,
+                    apply_retry_number,
+                    staged_candidate,
+                ) = self._schedule_apply_retry(
+                    workspace=workspace,
+                    candidate=staged_candidate or candidate,
+                    staged_candidate=staged_candidate,
+                    proposal=proposal,
+                    rejection_reason=rejection_reason,
+                    retry_plan_id=retry_plan_id,
+                    apply_retry_number=apply_retry_number,
                 )
+                continue
+            if staged_backup is not None:
+                workspace.discard(staged_backup)
 
             candidate_run = self.runner.run(
                 candidate.path, candidate.artifact_dir / f"evaluation-{evaluation:04d}"
@@ -334,12 +386,18 @@ class Director:
                 best_repository_path = candidate.path
                 staged_candidate = None
                 staged_patch_count = 0
+                retry_plan_id = None
+                apply_rejection_feedback = None
+                apply_retry_number = 0
                 continue
 
             if (
                 self.config.max_staged_patches > 1
                 and staged_patch_count + 1 < self.config.max_staged_patches
             ):
+                retry_plan_id = None
+                apply_rejection_feedback = None
+                apply_retry_number = 0
                 staged_candidate = candidate
                 staged_patch_count += 1
                 events.append(
@@ -356,6 +414,9 @@ class Director:
 
             workspace.discard(candidate)
             staged_candidate = None
+            retry_plan_id = None
+            apply_rejection_feedback = None
+            apply_retry_number = 0
             events.append(
                 DirectorEvent(
                     evaluation,
@@ -396,6 +457,30 @@ class Director:
             best_repository_path,
             started,
         )
+
+    def _schedule_apply_retry(
+        self,
+        *,
+        workspace: Workspace,
+        candidate: Any,
+        staged_candidate: Any,
+        proposal: PatchProposal,
+        rejection_reason: str,
+        retry_plan_id: str | None,
+        apply_retry_number: int,
+    ) -> tuple[str | None, str | None, int, Any]:
+        """Keep formatting retries bounded without relaxing any patch guard."""
+
+        plan_id = retry_plan_id or proposal.plan_id or proposal.description or "unnamed"
+        if apply_retry_number < self.config.max_apply_retries_per_plan_item:
+            if candidate is not staged_candidate:
+                workspace.discard(candidate)
+            return plan_id, rejection_reason, apply_retry_number + 1, staged_candidate
+        if staged_candidate is not None:
+            workspace.discard(staged_candidate)
+        elif candidate is not None:
+            workspace.discard(candidate)
+        return None, None, 0, None
 
     def _result(
         self,
@@ -448,6 +533,32 @@ def _accepts_candidate(
 
 def _score_tuple(score: Score) -> tuple[int | float, ...]:
     return score.score
+
+
+def _is_repairable_apply_rejection(reasons: tuple[str, ...]) -> bool:
+    """Identify proposal-format failures without retrying safety violations."""
+
+    repairable_prefixes = (
+        "empty diff",
+        "invalid unified diff",
+        "invalid diff header",
+        "preimage SHA-256 mismatch",
+        "missing preimage SHA-256",
+        "invalid preimage SHA-256",
+        "preimage file is missing or not a regular file",
+    )
+    return bool(reasons) and all(
+        reason.startswith(repairable_prefixes) for reason in reasons
+    )
+
+
+def _apply_rejection_reason(reason: str | None, stderr: str) -> str:
+    detail = stderr.strip()
+    if not detail:
+        return reason or "patch application failed"
+    if reason and detail != reason:
+        return f"{reason}: {detail}"
+    return detail
 
 
 def _is_full_revival(score: Score) -> bool:

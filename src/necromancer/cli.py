@@ -104,3 +104,6 @@ def main(argv: list[str] | None = None) -> int:
     result = runner.run(candidate.path, candidate.artifact_dir)
     print(result.result_path)
     return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main())

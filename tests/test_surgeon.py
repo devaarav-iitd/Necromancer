@@ -68,10 +68,18 @@ def test_real_surgeon_targets_innermost_non_test_traceback_file(tmp_path: Path) 
             best_score=BootstrapScore(False, 0, 1, 0, frozenset()),
             repository_path=repository,
             result_path=result_path,
+            retry_plan_id="fix-fractions-gcd",
+            apply_rejection_feedback="git apply --check rejected the diff: patch failed",
+            apply_retry_number=1,
         )
     )
 
     assert proposal is not None
+    assert proposal.plan_id == "fix-fractions-gcd"
     assert proposal.preimage_sha256 == {"package/broken.py": target_hash}
     assert "Target file: package/broken.py" in str(client.request["user_content"])
     assert "tests/test_broken.py" in str(client.request["user_content"])
+    assert "Exact previous rejection:" in str(client.request["user_content"])
+    assert "git apply --check rejected the diff: patch failed" in str(
+        client.request["user_content"]
+    )

@@ -1,0 +1,118 @@
+{
+  "status": "apply_rejected",
+  "baseline_score": [
+    1,
+    0,
+    -18
+  ],
+  "final_score": [
+    1,
+    5,
+    -8
+  ],
+  "accepted_snapshot_id": "accepted-0002",
+  "evaluations": 3,
+  "events": [
+    {
+      "evaluation": 0,
+      "status": "baseline",
+      "reason": null,
+      "before_score": null,
+      "after_score": [
+        1,
+        0,
+        -18
+      ],
+      "patch_description": ""
+    },
+    {
+      "evaluation": 1,
+      "status": "accepted",
+      "reason": null,
+      "before_score": [
+        1,
+        0,
+        -18
+      ],
+      "after_score": [
+        1,
+        2,
+        -14
+      ],
+      "patch_description": "py3-expand-args-string-compat: All nine tests fail before execution because expand_args references Python 2's undefined unicode name. Defining unicode as str on Python 3 removes that blocker, and passing text rather than encoded bytes to Python 3 shlex preserves argument parsing while retaining the existing Python 2 path."
+    },
+    {
+      "evaluation": 2,
+      "status": "accepted",
+      "reason": null,
+      "before_score": [
+        1,
+        2,
+        -14
+      ],
+      "after_score": [
+        1,
+        5,
+        -8
+      ],
+      "patch_description": "fix-text-mode-subprocess-input: Command.run starts subprocesses with universal_newlines=True, so communicate() requires text input. Passing UTF-8 bytes causes Python 3.14 to attempt to encode bytes and raise AttributeError; passing self.data directly preserves text-mode behavior and also supports piped command output."
+    },
+    {
+      "evaluation": 3,
+      "status": "apply_rejected",
+      "reason": "git apply --check rejected the diff",
+      "before_score": [
+        1,
+        5,
+        -8
+      ],
+      "after_score": null,
+      "patch_description": "fix-connected-command-status: connect() currently executes a parsed argv directly, so a missing executable raises FileNotFoundError instead of producing a shell exit status. Execute the original command through the shell and have status_code poll the process so failed commands report their completed nonzero status."
+    }
+  ],
+  "review_records": [],
+  "elapsed_seconds": 70.596668,
+  "model_patches": [
+    {
+      "plan_id": "py3-expand-args-string-compat",
+      "rationale": "All nine tests fail before execution because expand_args references Python 2's undefined unicode name. Defining unicode as str on Python 3 removes that blocker, and passing text rather than encoded bytes to Python 3 shlex preserves argument parsing while retaining the existing Python 2 path.",
+      "expected_affected_tests": [
+        "test_envoy.py::SimpleTest::test_input",
+        "test_envoy.py::SimpleTest::test_non_existing_command",
+        "test_envoy.py::SimpleTest::test_pipe",
+        "test_envoy.py::SimpleTest::test_quoted_args",
+        "test_envoy.py::SimpleTest::test_timeout",
+        "test_envoy.py::ConnectedCommandTests::test_input",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_failure",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_none",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_success"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "a474e1b033d81da391ccface7c2a9991137f007b4554eb72609e2e448cc19c86",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -15,6 +15,12 @@ import threading\n import traceback\n \n \n+try:\n+    unicode\n+except NameError:\n+    unicode = str\n+\n+\n __version__ = '0.0.3'\n __license__ = 'MIT'\n __author__ = 'Kenneth Reitz'\n@@ -177,7 +183,10 @@ def expand_args(command):\n \n     # Prepare arguments.\n     if isinstance(command, (str, unicode)):\n-        splitter = shlex.shlex(command.encode('utf-8'))\n+        if sys.version_info[0] >= 3:\n+            splitter = shlex.shlex(command)\n+        else:\n+            splitter = shlex.shlex(command.encode('utf-8'))\n         splitter.whitespace = '|'\n         splitter.whitespace_split = True\n         command = []\n"
+    },
+    {
+      "plan_id": "fix-text-mode-subprocess-input",
+      "rationale": "Command.run starts subprocesses with universal_newlines=True, so communicate() requires text input. Passing UTF-8 bytes causes Python 3.14 to attempt to encode bytes and raise AttributeError; passing self.data directly preserves text-mode behavior and also supports piped command output.",
+      "expected_affected_tests": [
+        "test_envoy.py::SimpleTest::test_input",
+        "test_envoy.py::SimpleTest::test_pipe",
+        "test_envoy.py::SimpleTest::test_timeout"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "99210b6a9a2ab2b58f6cc81bfd82dd6bfc7bdcecb7fe9a7faf3a90947a9ce370",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -81,9 +81,7 @@ class Command(object):\n                 )\n \n                 if sys.version_info[0] >= 3:\n-                    self.out, self.err = self.process.communicate(\n-                        input = bytes(self.data, \"UTF-8\") if self.data else None\n-                    )\n+                    self.out, self.err = self.process.communicate(input=self.data)\n                 else:\n                     self.out, self.err = self.process.communicate(self.data)\n             except Exception as exc:\n"
+    },
+    {
+      "plan_id": "fix-connected-command-status",
+      "rationale": "connect() currently executes a parsed argv directly, so a missing executable raises FileNotFoundError instead of producing a shell exit status. Execute the original command through the shell and have status_code poll the process so failed commands report their completed nonzero status.",
+      "expected_affected_tests": [
+        "test_envoy.py::ConnectedCommandTests::test_status_code_failure",
+        "test_envoy.py::ConnectedCommandTests::test_status_code_success"
+      ],
+      "target_file": "envoy/core.py",
+      "preimage_sha256": "21c25addaabcc221f2985546088cc9536ca19da0f55136876b2715fe8072cd5d",
+      "diff": "diff --git a/envoy/core.py b/envoy/core.py\n--- a/envoy/core.py\n+++ b/envoy/core.py\n@@ -120,7 +120,7 @@ class ConnectedCommand(object):\n         \"\"\"The status code of the process.\n         If the code is None, assume that it's still running.\n         \"\"\"\n-        return self._status_code\n+        return self._process.poll()\n \n     @property\n     def pid(self):\n@@ -242,13 +242,12 @@ def run(command, data=None, timeout=None, kill_timeout=None, env=None, cwd=None):\n def connect(command, data=None, env=None, cwd=None):\n     \"\"\"Spawns a new process from the given command.\"\"\"\n \n-    # TODO: support piped commands\n-    command_str = expand_args(command).pop()\n     environ = dict(os.environ)\n     environ.update(env or {})\n \n-    process = subprocess.Popen(command_str,\n+    process = subprocess.Popen(command,\n         universal_newlines=True,\n-        shell=False,\n+        shell=True,\n         env=environ,\n         stdin=subprocess.PIPE,\n         stdout=subprocess.PIPE,\n"
+    }
+  ]
+}

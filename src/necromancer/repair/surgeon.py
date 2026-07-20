@@ -73,6 +73,7 @@ class RealSurgeon:
             diff=response.diff,
             preimage_sha256={response.target_file: response.preimage_sha256},
             description=f"{response.plan_id}: {response.rationale}",
+            plan_id=context.retry_plan_id or response.plan_id,
         )
 
 
@@ -89,17 +90,30 @@ def _request_content(
     evidence: str,
 ) -> str:
     result = json.loads(context.result_path.read_text(encoding="utf-8"))
-    return "\n\n".join(
+    retry_instruction = (
         (
-            f"Evaluation: {context.evaluation}",
-            f"Current score: {context.best_score.score}",
-            "Earliest blocking traceback:\n" + evidence,
-            "result.json:\n" + json.dumps(result, indent=2, sort_keys=True),
-            f"Target file: {target_file}",
-            f"Target preimage SHA-256: {preimage_sha256}",
-            "Target file contents:\n" + target_contents,
+            "This is formatting repair attempt "
+            f"{context.apply_retry_number} for the same plan item "
+            f"{context.retry_plan_id}. Return a corrected patch for that item; "
+            "do not change scope or touch protected tests/configuration.\n"
+            "Exact previous rejection:\n"
+            f"{context.apply_rejection_feedback}"
         )
+        if context.apply_rejection_feedback is not None
+        else None
     )
+    parts = [
+        f"Evaluation: {context.evaluation}",
+        f"Current score: {context.best_score.score}",
+        "Earliest blocking traceback:\n" + evidence,
+        "result.json:\n" + json.dumps(result, indent=2, sort_keys=True),
+        f"Target file: {target_file}",
+        f"Target preimage SHA-256: {preimage_sha256}",
+        "Target file contents:\n" + target_contents,
+    ]
+    if retry_instruction is not None:
+        parts.append(retry_instruction)
+    return "\n\n".join(parts)
 
 
 def _earliest_source_target(repository: Path, result_path: Path) -> tuple[Path, str] | None:

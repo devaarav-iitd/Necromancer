@@ -129,6 +129,30 @@ class Workspace:
         artifact_dir.mkdir(parents=True)
         return CandidateSnapshot(candidate_id, destination, artifact_dir, accepted_id)
 
+    def clone_candidate(
+        self, source: CandidateSnapshot, identifier: str
+    ) -> CandidateSnapshot:
+        """Create a fresh candidate from a disposable candidate's exact state.
+
+        Director uses this only to preserve a bounded staged bundle while an
+        individual patch is retried.  The accepted snapshot remains untouched.
+        """
+
+        source_path = source.path.resolve()
+        if source_path.parent != self.candidates_dir or not source_path.is_dir():
+            raise ValueError("Only a candidate from this workspace may be cloned")
+        _validate_snapshot_identifier(identifier)
+        destination = self.candidates_dir / identifier
+        if destination.exists():
+            raise ValueError(f"Candidate already exists: {destination}")
+        shutil.copytree(source_path, destination, symlinks=True)
+        _make_writable(destination)
+        artifact_dir = self.artifacts_dir / identifier
+        artifact_dir.mkdir(parents=True)
+        return CandidateSnapshot(
+            identifier, destination, artifact_dir, source.parent_accepted_id
+        )
+
     def accept(self, candidate: CandidateSnapshot) -> str:
         """Promote a candidate by copying it into a new immutable accepted state."""
 

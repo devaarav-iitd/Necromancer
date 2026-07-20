@@ -1,0 +1,65 @@
+{
+  "status": "baseline_not_runnable",
+  "baseline_score": [
+    0,
+    0,
+    -3,
+    0
+  ],
+  "final_score": [
+    0,
+    1,
+    -2,
+    0
+  ],
+  "accepted_snapshot_id": "accepted-0001",
+  "evaluations": 1,
+  "events": [
+    {
+      "evaluation": 0,
+      "status": "baseline",
+      "reason": null,
+      "before_score": null,
+      "after_score": [
+        0,
+        0,
+        -3,
+        0
+      ],
+      "patch_description": ""
+    },
+    {
+      "evaluation": 1,
+      "status": "bootstrap_accepted",
+      "reason": null,
+      "before_score": [
+        0,
+        0,
+        -3,
+        0
+      ],
+      "after_score": [
+        0,
+        1,
+        -2,
+        0
+      ],
+      "patch_description": "replace-pkg-resources: Importing vincent.core fails because pkg_resources is unavailable. Use the standard-library importlib.resources API to read the bundled HTML template without changing its existing bytes-to-string conversion behavior."
+    }
+  ],
+  "review_records": [],
+  "elapsed_seconds": 18.809166,
+  "model_patches": [
+    {
+      "plan_id": "replace-pkg-resources",
+      "rationale": "Importing vincent.core fails because pkg_resources is unavailable. Use the standard-library importlib.resources API to read the bundled HTML template without changing its existing bytes-to-string conversion behavior.",
+      "expected_affected_tests": [
+        "tests/test_unicode_literals.py",
+        "tests/test_vega.py"
+      ],
+      "target_file": "vincent/core.py",
+      "preimage_sha256": "d562efd7c88dd8d6980898606afd5d1ed37a1c805712f92336ecadc8d64922a2",
+      "diff": "diff --git a/vincent/core.py b/vincent/core.py\n--- a/vincent/core.py\n+++ b/vincent/core.py\n@@ -6,8 +6,8 @@ Core: The core functionality for Vincent to map to Vega grammar\n \"\"\"\n from __future__ import (print_function, division)\n import json\n+from importlib.resources import files\n from string import Template\n-from pkg_resources import resource_string\n \n try:\n     import pandas as pd\n@@ -338,7 +338,7 @@ class GrammarClass(object):\n \n         if html_out:\n             template = Template(\n-                str(resource_string('vincent', 'vega_template.html')))\n+                str(files('vincent').joinpath('vega_template.html').read_bytes()))\n             with open(html_path, 'w') as f:\n                 f.write(template.substitute(path=path))\n \n"
+    }
+  ]
+}

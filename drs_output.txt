@@ -1,0 +1,59 @@
+{
+  "status": "apply_rejected",
+  "baseline_score": [
+    0,
+    0,
+    -4,
+    0
+  ],
+  "final_score": [
+    0,
+    0,
+    -4,
+    0
+  ],
+  "accepted_snapshot_id": null,
+  "evaluations": 1,
+  "events": [
+    {
+      "evaluation": 0,
+      "status": "baseline",
+      "reason": null,
+      "before_score": null,
+      "after_score": [
+        0,
+        0,
+        -4,
+        0
+      ],
+      "patch_description": ""
+    },
+    {
+      "evaluation": 1,
+      "status": "apply_rejected",
+      "reason": "git apply --check rejected the diff",
+      "before_score": [
+        0,
+        0,
+        -4,
+        0
+      ],
+      "after_score": null,
+      "patch_description": "shim-missing-pkg-resources: Importing this renderer fails because coreapi requires the removed pkg_resources module only to query installed distributions. Registering a minimal importlib.metadata-backed compatibility module before importing coreapi directly resolves that collection blocker without changing renderer behavior."
+    }
+  ],
+  "review_records": [],
+  "elapsed_seconds": 39.863039,
+  "model_patches": [
+    {
+      "plan_id": "shim-missing-pkg-resources",
+      "rationale": "Importing this renderer fails because coreapi requires the removed pkg_resources module only to query installed distributions. Registering a minimal importlib.metadata-backed compatibility module before importing coreapi directly resolves that collection blocker without changing renderer behavior.",
+      "expected_affected_tests": [
+        "tests/renderers/test_swagger.py"
+      ],
+      "target_file": "rest_framework_swagger/renderers.py",
+      "preimage_sha256": "7ddbfb3ad9e191e790d5ddc1bf831e89720f9e6afcbdd5c16f73cc4ab434ac99",
+      "diff": "diff --git a/rest_framework_swagger/renderers.py b/rest_framework_swagger/renderers.py\n--- a/rest_framework_swagger/renderers.py\n+++ b/rest_framework_swagger/renderers.py\n@@ -1,3 +1,16 @@\n+try:\n+    import pkg_resources\n+except ModuleNotFoundError:\n+    import sys\n+    from importlib import metadata\n+    from types import ModuleType\n+\n+    pkg_resources = ModuleType('pkg_resources')\n+    pkg_resources.DistributionNotFound = metadata.PackageNotFoundError\n+    pkg_resources.get_distribution = metadata.distribution\n+    sys.modules['pkg_resources'] = pkg_resources\n+\n import coreapi\n from coreapi.compat import force_bytes\n from django.shortcuts import render, resolve_url\n"
+    }
+  ]
+}
