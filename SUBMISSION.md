@@ -6,7 +6,7 @@
 - **Track:** Developer Tools
 - **Codex /feedback session ID:** 019f715e-5bf2-7f91-a2db-a246236fea09
 - **Repository:** https://github.com/devaarav-iitd/Necromancer
-- **Demo video:** [ADD YOUTUBE LINK AFTER RECORDING]
+- **Demo video:** https://youtu.be/CLc-UfjBdpU
 - **Team:** Aarav (devaarav-iitd) · Gaurangi (devgaurangibhatia)
 
 ## Submission checklist

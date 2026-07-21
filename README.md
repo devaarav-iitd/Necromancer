@@ -4,7 +4,7 @@
 
 **Headline result:** GPT-5.6 revived [algorithms](docs/BENCHMARK.md) from a collection-blocked state to **61/61 passing tests** with one verified one-line patch.
 
-[Repository](https://github.com/devaarav-iitd/Necromancer) · Demo video: not yet published
+[Repository](https://github.com/devaarav-iitd/Necromancer) · Demo video: (https://youtu.be/CLc-UfjBdpU)
 
  **OpenAI Build Week submission** · Track: Developer Tools
  Codex `/feedback` session ID: `019f715e-5bf2-7f91-a2db-a246236fea09`
